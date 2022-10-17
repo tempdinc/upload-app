@@ -1,8 +1,9 @@
 <?php
+// $inspection_id = (isset($_GET["id"])) ? $_GET["id"] : 'rec1dxoRQRGBL6ZI5';
 $inspection_id = $_GET["id"];
-$inspection_type = $_GET["type"];
-$slack_inspection_type = ($inspection_type == 'finalinspection') ? 'Final-inspection' : 'Pre-Inspection';
-$upload_type = $_GET["upload"];
+$inspection_type = (isset($_GET["type"])) ? $_GET["type"] : 'preinspection';
+$inspection_type_name = ($inspection_type == 'finalinspection') ? 'Final-inspection' : 'Pre-Inspection';
+$upload_type = (isset($_GET["upload"])) ? $_GET["upload"] : 'Issues';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -329,9 +330,12 @@ $upload_type = $_GET["upload"];
 
 	<script type="text/javascript">
 		// Slack Data
-		const slackUrl = 'https://hooks.slack.com/services/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';
+		const slackUrl = 'https://hooks.slack.com/services/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';
+		var slackResponse = false;
 
 		// Custom example logic
+		var requestOptions;
+		var googleResponse;
 		var uploader = new plupload.Uploader({
 			runtimes: 'html5,flash,silverlight,html4',
 			browse_button: 'pickfiles', // you can pass an id...
@@ -395,7 +399,11 @@ $upload_type = $_GET["upload"];
 						var base64data = reader.result;
 						base64data = base64data.substring(base64data.indexOf(",") + 1);
 
-						// console.log('base64data' + base64data);
+						console.log("record_id", '<?php echo $inspection_id ?>');
+						console.log("inspection_type", '<?php echo $inspection_type ?>');
+						console.log("upload_type", '<?php echo $upload_type ?>');
+						console.log("filename", file.name);
+						console.log("mimeType", file.type);
 
 						var formdata = new FormData();
 						formdata.append("record_id", '<?php echo $inspection_id ?>');
@@ -405,17 +413,18 @@ $upload_type = $_GET["upload"];
 						formdata.append("filename", file.name);
 						formdata.append("mimeType", file.type);
 
-						var requestOptions = {
+						requestOptions = {
 							method: 'POST',
-							mode: 'no-cors',
+							// mode: 'no-cors',
 							body: formdata,
 							redirect: 'follow'
 						};
 
-						await fetch("https://script.google.com/macros/s/AKfycbzzZSv_IlDCq8SDZ7zvLNy_jiYKNlpWe_Mm3dQs_2HtGrTf8qyDjP9ee1436cd22BzPJQ/exec", requestOptions)
-							.then(response => response.text())
-							.then(result => console.log(result))
-							.catch(error => console.log('error', error));
+						const response = await getGoogleResponse();
+						sendDataToSlack(googleResponse);
+						document.getElementById('container').classList.add('d-none');
+						document.getElementById('list_wrapper').classList.add('d-none');
+						document.getElementById('done_container').classList.remove('d-none');
 					}
 
 				},
@@ -441,10 +450,7 @@ $upload_type = $_GET["upload"];
 
 				UploadComplete: function() {
 					console.log('UploadComplete!');
-					document.getElementById('container').classList.add('d-none');
-					document.getElementById('list_wrapper').classList.add('d-none');
-					document.getElementById('done_container').classList.remove('d-none');
-					sendDataToSlack();
+					// sendDataToSlack();
 				},
 
 				Error: function(up, err) {
@@ -454,16 +460,24 @@ $upload_type = $_GET["upload"];
 			}
 		});
 
+		async function getGoogleResponse() {
+			return fetch("https://script.google.com/macros/s/AKfycbzzZSv_IlDCq8SDZ7zvLNy_jiYKNlpWe_Mm3dQs_2HtGrTf8qyDjP9ee1436cd22BzPJQ/exec", requestOptions)
+				.then(response => response.text())
+				// .then(result => console.log(result))
+				.then(result => googleResponse = result)
+				.catch(error => console.log('error', error));
+		}
+
 		function sendDataToSlack() {
 
-			const slackAlert = '<?php echo $slack_inspection_type; ?> - Photos uploading started!';
+			const slackAlert = '<?php echo $inspection_type_name; ?> (<?php echo $upload_type; ?>) - Photos uploading started!!!';
 
 			let newData = {
 				"blocks": [{
 					"type": "section",
 					"text": {
 						"type": "mrkdwn",
-						"text": ":camera: * !!! *"
+						"text": ":camera: *<" + googleResponse + "|" + slackAlert + ">*",
 					}
 				}]
 			}
@@ -475,12 +489,12 @@ $upload_type = $_GET["upload"];
 				body: JSON.stringify(newData)
 			}
 			console.log(newData);
+			if(slackResponse === false) {
 			fetch(slackUrl, options)
 				.then(response => response.text())
 				.then(result => console.log(result))
 				.catch(error => console.log('error', error));
-
-			// return result;  
+			}
 		}
 
 		$(window).load(function() {
