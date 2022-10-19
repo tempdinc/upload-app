@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/bootstrap.php';
 // $inspection_id = (isset($_GET["id"])) ? $_GET["id"] : 'rec1dxoRQRGBL6ZI5';
 $inspection_id = $_GET["id"];
 $inspection_type = (isset($_GET["type"])) ? $_GET["type"] : 'preinspection';
@@ -330,7 +331,7 @@ $upload_type = (isset($_GET["upload"])) ? $_GET["upload"] : 'Issues';
 
 	<script type="text/javascript">
 		// Slack Data
-		const slackUrl = 'https://hooks.slack.com/services/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';
+		const slackUrl = <?php echo env('SLACK_WEBHOOK', 0) ?>;
 		var slackResponse = false;
 
 		// Custom example logic
