@@ -330,7 +330,7 @@ $upload_type = (isset($_GET["upload"])) ? $_GET["upload"] : 'Issues';
 
 	<script type="text/javascript">
 		// Slack Data
-		const slackUrl = 'https://hooks.slack.com/services/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';
+		const slackUrl = 'https://hooks.slack.com/services/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';
 		var slackResponse = false;
 
 		// Custom example logic
@@ -489,11 +489,11 @@ $upload_type = (isset($_GET["upload"])) ? $_GET["upload"] : 'Issues';
 				body: JSON.stringify(newData)
 			}
 			console.log(newData);
-			if(slackResponse === false) {
-			fetch(slackUrl, options)
-				.then(response => response.text())
-				.then(result => console.log(result))
-				.catch(error => console.log('error', error));
+			if (slackResponse === false) {
+				fetch(slackUrl, options)
+					.then(response => response.text())
+					.then(result => console.log(result))
+					.catch(error => console.log('error', error));
 			}
 		}
 
